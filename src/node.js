@@ -57,6 +57,35 @@
     });
   }
 
+  function request_fs_node(url, callback){
+    var fs = require('fs'),
+    body = fs.readFileSync(url);
+    callback(body);
+  }
+
+  function request_node(url, callback) {
+    require('http').get(url, function(response) {
+          var body;
+          response.setEncoding('binary');
+
+          response.on('data', function (chunk) {
+            if (response.statusCode === 200) {
+              body += chunk;
+            }
+          });
+
+          response.on('end', function() {
+            fabric.log("end: " + url);
+            callback(body);
+          });
+
+         // error event
+         response.on('error', function(e) {
+          fabric.log("Got error: " + e.message);
+         });
+       });
+  }
+
   fabric.util.loadImage = function(url, callback, context) {
     var createImageAndCallBack = function(data){
       img.src = new Buffer(data, 'binary');
@@ -68,6 +97,8 @@
     if (url && url.indexOf('data') === 0) {
       img.src = img._src = url;
       callback && callback.call(context, img);
+    } else if (url && fabric.isLikelyNode && url.indexOf('http') !== 0) {
+      request_fs_node(url, createImageAndCallBack);
     }
     else if (url && url.indexOf('http') !== 0) {
       request_fs(url, createImageAndCallBack);

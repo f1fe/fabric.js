@@ -411,7 +411,15 @@
   fabric.Image.fromElement = function(element, callback, options) {
     var parsedAttributes = fabric.parseAttributes(element, fabric.Image.ATTRIBUTE_NAMES);
 
-    fabric.Image.fromURL(parsedAttributes['xlink:href'], callback, extend((options ? fabric.util.object.clone(options) : { }), parsedAttributes));
+    if (fabric.isLikelyNode) {
+      fabric.util.loadImage(parsedAttributes['xlink:href'], function(img) {
+        var img = new fabric.Image(img, extend((options ? fabric.util.object.clone(options) : { }), parsedAttributes));
+        callback(img);
+      });
+    } else {
+      fabric.Image.fromURL(parsedAttributes['xlink:href'], callback, extend((options ? fabric.util.object.clone(options) : { }), parsedAttributes));
+    }
+
   };
 
   /**
